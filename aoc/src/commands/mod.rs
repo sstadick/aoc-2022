@@ -1,4 +1,6 @@
 pub mod day0;
+pub mod day1a;
+pub mod day1b;
 
 use std::error::Error;
 
