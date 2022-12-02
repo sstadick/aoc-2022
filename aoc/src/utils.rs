@@ -21,6 +21,7 @@ impl fmt::Display for SlurpError {
 
 impl Error for SlurpError {}
 
+/// Slurp file will try to parse the string into `T` as long as T implements FromStr
 #[allow(clippy::missing_errors_doc)]
 pub fn slurp_file<P, T>(path: P) -> Result<Vec<T>, SlurpError>
 where
