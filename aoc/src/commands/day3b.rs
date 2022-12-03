@@ -68,21 +68,39 @@ fn find_badge_raw(elf1: &[u8], elf2: &[u8], elf3: &[u8]) -> u8 {
     elf1_ruck.find_badge(&elf2_ruck, &elf3_ruck)
 }
 
-/// Helper newtype to enforce the conversion from an ascii value to a priority.
-struct Priority(u8);
+mod item {
+    //! Putting [`Item`] in a module so that it can only be created using blessed methods.
 
-impl From<u8> for Priority {
-    /// Convert an ascii value to a priority value.
-    ///
-    /// A-Z are priority 27-52
-    /// a-z are priority 1-26
-    ///
-    /// This is done by subtracting the ascii value for `A` from the input byte and then looking up the
-    /// corresponding value in the lookup table. We assume all inputs are valid.
-    fn from(byte: u8) -> Self {
-        Self(ACII_TO_PRIORITY[(byte - 65) as usize])
+    use super::ACII_TO_PRIORITY;
+
+    /// Helper newtype to enforce the conversion from an ascii value to an Item (priority).
+    #[derive(Copy, Clone)]
+    #[repr(transparent)]
+    pub struct Item(u8);
+
+    impl Item {
+        /// Get the priority value of this [`Item`].
+        #[inline]
+        pub fn priority(&self) -> u8 {
+            self.0
+        }
+    }
+
+    impl From<u8> for Item {
+        /// Convert an ascii value to a priority value.
+        ///
+        /// A-Z are priority 27-52
+        /// a-z are priority 1-26
+        ///
+        /// This is done by subtracting the ascii value for `A` from the input byte and then looking up the
+        /// corresponding value in the lookup table. We assume all inputs are valid.
+        fn from(byte: u8) -> Self {
+            Self(ACII_TO_PRIORITY[(byte - 65) as usize])
+        }
     }
 }
+
+use item::Item;
 
 /// Our ruck is a bitset, since there are only 52 possible values for priorities
 struct Ruck(u64);
@@ -106,20 +124,20 @@ impl Ruck {
     /// Add an item to the rucksack.
     ///
     /// **Note**: Items are assumed to have been converted to a priority.
-    fn add_item(&mut self, item: Priority) {
+    fn add_item(&mut self, item: Item) {
         // Set the bit for the new item
-        self.0 |= 1 << item.0;
+        self.0 |= 1 << item.priority();
     }
 
     /// Remove an item from the ruck
-    fn remove_item(&mut self, item: Priority) {
+    fn remove_item(&mut self, item: Item) {
         // Unset the bit for the item
-        self.0 &= !(1 << item.0);
+        self.0 &= !(1 << item.priority());
     }
 
     /// Check if the ruck contains an item
-    fn contains(&self, item: Priority) -> bool {
-        (self.0 >> item.0) & 1 == 1
+    fn contains(&self, item: Item) -> bool {
+        (self.0 >> item.priority()) & 1 == 1
     }
 
     /// Find the item shared across three elves
