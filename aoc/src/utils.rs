@@ -2,7 +2,7 @@ use std::{
     error::Error,
     fmt::{self, Debug},
     fs::File,
-    io::{BufRead, BufReader},
+    io::{BufRead, BufReader, Read},
     path::Path,
     str::FromStr,
 };
@@ -20,6 +20,16 @@ impl fmt::Display for SlurpError {
 }
 
 impl Error for SlurpError {}
+
+pub fn slurp_bytes<P>(path: P) -> Result<Vec<u8>, SlurpError>
+where
+    P: AsRef<Path>,
+{
+    let mut reader = BufReader::new(File::open(path).expect("Failed to open file"));
+    let mut bytes = Vec::new();
+    reader.read_to_end(&mut bytes).map_err(|e| SlurpError { line: 0, msg: e.to_string() })?;
+    Ok(bytes)
+}
 
 /// Slurp file will try to parse the string into `T` as long as T implements FromStr
 #[allow(clippy::missing_errors_doc)]
